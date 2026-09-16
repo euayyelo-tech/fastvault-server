@@ -57,6 +57,53 @@ find web-vault -type f -name '*.js' -print0 \
    -e 's/FastVault-Client-Name/Bitwarden-Client-Name/g' \
    -e 's/FastVault-Client-Version/Bitwarden-Client-Version/g'
 
+# 2c. Inline wordmark: the anon (login) layout renders the Vaultwarden
+#     wordmark as an inline <svg viewBox="0 0 290 60"> baked into the JS
+#     bundle, not from web-vault/images/*, so the logo copy in step 1 never
+#     touches it. Its <title> already got renamed by step 2's blanket
+#     replace, but the <path> data still draws the word "vaultwarden".
+#     Rewrite the whole element's inner content (title + mark + wordmark
+#     text) in every JS file that contains it, preserving whichever quote
+#     style (") or (\") the minifier used around the attribute values.
+"$PY" - <<'PYEOF'
+import glob, os, re, sys
+
+INNER = ('<title>FastVault</title>'
+         '<rect x="4" y="8" width="44" height="44" rx="10" class="tw-fill-marketing-logo"/>'
+         '<rect x="16" y="24" width="20" height="14" rx="2" fill="#0b1220"/>'
+         '<circle cx="26" cy="31" r="2.6" class="tw-fill-marketing-logo"/>'
+         '<text x="60" y="41" font-family="Inter,Segoe UI,Arial,sans-serif" '
+         'font-size="30" font-weight="700" class="tw-fill-marketing-logo">FastVault</text>')
+
+PATTERN = re.compile(r'(<svg[^>]*viewBox=\\?"0 0 290 60\\?"[^>]*>).*?(</svg>)', re.DOTALL)
+
+files = sorted(set(glob.glob('web-vault/**/*.js', recursive=True)))
+total = 0
+for path in files:
+    with open(path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    if 'viewBox=\\"0 0 290 60\\"' not in content and 'viewBox="0 0 290 60"' not in content:
+        continue
+    count = 0
+    def repl(m):
+        global count
+        count += 1
+        opening, closing = m.group(1), m.group(2)
+        inner = INNER.replace('"', '\\"') if '\\"' in opening else INNER
+        return opening + inner + closing
+    new_content = PATTERN.sub(repl, content)
+    if count:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        total += count
+        print(f"  {path}: {count} inline wordmark replacement(s)")
+
+print(f"inline wordmark SVG: {total} total replacement(s)")
+if total == 0:
+    print("ERROR: expected at least one Vaultwarden wordmark <svg viewBox=\"0 0 290 60\"> to replace", file=sys.stderr)
+    sys.exit(1)
+PYEOF
+
 # 3. Colours: append our stylesheet to every CSS bundle so it loads last.
 for css in web-vault/*.css web-vault/styles*.css; do
   [ -f "$css" ] && cat branding/fastvault.css >> "$css"

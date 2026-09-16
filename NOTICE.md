@@ -17,7 +17,8 @@ Modifications by FSITES LTD (https://fastvault.app), starting 2026-09-16:
   release watch, in addition to upstream's own workflows.
 - `scripts/build-web-vault.sh`: applies FastVault branding to the
   prebuilt web vault from dani-garcia/bw_web_builds before it is copied
-  into the image.
+  into the image, including rewriting the login page's inline wordmark
+  SVG (which the upstream logo files don't cover).
 - `docker/`: image build copies that branded web vault.
 
 The complete corresponding source of the version running at
