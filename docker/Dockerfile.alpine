@@ -9,6 +9,25 @@
 # 	https://docs.docker.com/develop/develop-images/multistage-build/
 # 	https://whitfin.io/speeding-up-rust-docker-builds/
 
+####################### VAULT BUILD IMAGE #######################
+# The web-vault digest specifies a particular web-vault build on Docker Hub.
+# Using the digest instead of the tag name provides better security,
+# as the digest of an image is immutable, whereas a tag name can later
+# be changed to point to a malicious image.
+#
+# To verify the current digest for a given tag name:
+# - From https://hub.docker.com/r/vaultwarden/web-vault/tags,
+#   click the tag name to view the digest of the image it currently points to.
+# - From the command line:
+#     $ docker pull docker.io/vaultwarden/web-vault:v2026.7.0
+#     $ docker image inspect --format "{{.RepoDigests}}" docker.io/vaultwarden/web-vault:v2026.7.0
+#     [docker.io/vaultwarden/web-vault@sha256:ba8bab66d4330ab9dbafa8f245bcbe99cf6ee3f2c8ce9b5fbb10e9c49658451c]
+#
+# - Conversely, to get the tag name from the digest:
+#     $ docker image inspect --format "{{.RepoTags}}" docker.io/vaultwarden/web-vault@sha256:ba8bab66d4330ab9dbafa8f245bcbe99cf6ee3f2c8ce9b5fbb10e9c49658451c
+#     [docker.io/vaultwarden/web-vault:v2026.7.0]
+#
+FROM --platform=linux/amd64 docker.io/vaultwarden/web-vault@sha256:ba8bab66d4330ab9dbafa8f245bcbe99cf6ee3f2c8ce9b5fbb10e9c49658451c AS vault
 
 ########################## ALPINE BUILD IMAGES ##########################
 ## NOTE: The Alpine Base Images do not support other platforms then linux/amd64 and linux/arm64

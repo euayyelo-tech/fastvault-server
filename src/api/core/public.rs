@@ -123,6 +123,11 @@ async fn ldap_import(data: Json<OrgImportData>, token: PublicToken, conn: DbConn
                 err!("Error looking up organization")
             };
 
+            let max_seats = CONFIG.org_max_seats();
+            if max_seats > 0 && Membership::count_by_org(&org_id, &conn).await >= max_seats {
+                err!(format!("This organization has reached its limit of {max_seats} members."))
+            }
+
             let mut new_member = Membership::new(user.uuid.clone(), org_id.clone(), Some(org_email.clone()));
             new_member.set_external_id(Some(user_data.external_id.clone()));
             new_member.access_all = false;

@@ -18,4 +18,7 @@ Everything else is upstream's `.env.template`.
 
 ## Updating from upstream
 
-    git fetch upstream && git merge <new-tag>   # then bump the version in .github/workflows/image.yml
+    git fetch upstream && git merge <new-tag>
+    # then update the `base` tag in .github/workflows/upstream-watch.yml
+    # and, if a new web vault build is required, WEB_VAULT_VERSION in
+    # scripts/build-web-vault.sh

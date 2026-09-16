@@ -1,6 +1,7 @@
 # Fails (and so emails the owner) when Vaultwarden publishes a release newer
 # than the one this fork is based on. Security fixes get merged, not missed.
 name: upstream-watch
+permissions: {}
 on:
   schedule: [{ cron: '0 9 * * 1' }]
   workflow_dispatch:

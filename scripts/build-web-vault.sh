@@ -39,16 +39,23 @@ find web-vault -type f \( -name '*.js' -o -name '*.html' -o -name '*.json' -o -n
    -e 's/Bitwarden/FastVault/g' \
    -e 's/Vaultwarden/FastVault/g' \
    -e 's#https://bitwarden\.com/help[^"'"'"' ]*#https://fastvault.app/support#g' \
-   -e 's#https://bitwarden\.com#https://fastvault.app#g'
+   -e 's#https://bitwarden\.com#https://fastvault.app#g' \
+   -e 's#https://github\.com/dani-garcia/vaultwarden/wiki/[^"'"'"' ]*#https://fastvault.app/support#g' \
+   -e 's#https://github\.com/dani-garcia/vaultwarden#https://github.com/euayyelo-tech/fastvault-server#g'
 
-# 2b. The upstream "about" screen names the real Bitwarden trademark on purpose
-#     (an honest attribution, same spirit as our own source.html). Step 2's blanket
-#     replace turns that into circular nonsense ("FastVault is not associated with
-#     the FastVault project nor FastVault Inc."); restore the real name there only.
+# 2b. Restore the two things step 2's blanket replace incorrectly renamed:
+#     - the real Bitwarden trademark in the upstream "about" screen's honest
+#       attribution (same spirit as our own source.html)
+#     - the HTTP client identification header NAMES (Bitwarden-Client-Name /
+#       Bitwarden-Client-Version) that the server matches on to recognise the
+#       client during sync; renaming these breaks SSH-key item sync and can
+#       cause duplicate email-2FA codes.
 find web-vault -type f -name '*.js' -print0 \
  | xargs -0 sed -i \
    -e 's/A modified version of the FastVault® Web Vault for FastVault (an unofficial rewrite of the FastVault® server)\./A modified version of the Bitwarden® Web Vault for FastVault (an unofficial rewrite of the Bitwarden® server)./g' \
-   -e 's/FastVault is not associated with the FastVault® project nor FastVault Inc\./FastVault is not associated with the Bitwarden® project nor Bitwarden Inc./g'
+   -e 's/FastVault is not associated with the FastVault® project nor FastVault Inc\./FastVault is not associated with the Bitwarden® project nor Bitwarden Inc./g' \
+   -e 's/FastVault-Client-Name/Bitwarden-Client-Name/g' \
+   -e 's/FastVault-Client-Version/Bitwarden-Client-Version/g'
 
 # 3. Colours: append our stylesheet to every CSS bundle so it loads last.
 for css in web-vault/*.css web-vault/styles*.css; do
@@ -63,6 +70,8 @@ echo "web-vault branded ($VER, tag $TAG): $(grep -rl 'FastVault' web-vault | wc 
 #  - source.html / *.wasm / *.map (trademark notice, compiled API header strings, debug maps)
 #  - the upstream "about" screen's honest trademark attribution (step 2b), which
 #    intentionally still names the real Bitwarden project/company
+#  - the restored Bitwarden-Client-Name / Bitwarden-Client-Version HTTP header
+#    names (step 2b), which the server matches on and must not be renamed
 #
 # Bundles are minified to a single line, so a whole-LINE exclude (grep -v) would
 # silently swallow any *other* stray Bitwarden/Vaultwarden occurrence that happens to
@@ -77,6 +86,8 @@ if [ -n "$CANDIDATES" ]; then
     STRIPPED=$(sed -E \
       -e 's/A modified version of the Bitwarden. Web Vault for FastVault \(an unofficial rewrite of the Bitwarden. server\)\.//g' \
       -e 's/FastVault is not associated with the Bitwarden. project nor Bitwarden Inc\.//g' \
+      -e 's/Bitwarden-Client-Name//g' \
+      -e 's/Bitwarden-Client-Version//g' \
       "$f")
     N=$(printf '%s' "$STRIPPED" | grep -oE 'Bitwarden|Vaultwarden' | wc -l || true)
     if [ "$N" -gt 0 ]; then

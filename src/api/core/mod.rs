@@ -231,8 +231,8 @@ fn config() -> Json<Value> {
         "version": "2026.6.0",
         "gitHash": option_env!("GIT_REV"),
         "server": {
-          "name": "Vaultwarden",
-          "url": "https://github.com/dani-garcia/vaultwarden"
+          "name": "FastVault",
+          "url": "https://github.com/euayyelo-tech/fastvault-server"
         },
         "settings": {
             "disableUserRegistration": CONFIG.is_signup_disabled(),
