@@ -1,0 +1,15 @@
+# Fails (and so emails the owner) when Vaultwarden publishes a release newer
+# than the one this fork is based on. Security fixes get merged, not missed.
+name: upstream-watch
+on:
+  schedule: [{ cron: '0 9 * * 1' }]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          latest=$(curl -s https://api.github.com/repos/dani-garcia/vaultwarden/releases/latest | jq -r .tag_name)
+          base="1.37.3"
+          echo "fork base: $base, upstream latest: $latest"
+          [ "$latest" = "$base" ] || { echo "::error::Vaultwarden $latest is out; merge it: git fetch upstream && git merge $latest"; exit 1; }

@@ -1,0 +1,26 @@
+name: image
+on:
+  push:
+    tags: ['*-fv*']          # e.g. 1.37.3-fv1
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y -qq libcairo2
+      - run: pip install cairosvg
+      - run: IMAGE_TAG="${GITHUB_REF_NAME}" bash scripts/build-web-vault.sh
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: ${{ github.actor }}, password: ${{ secrets.GITHUB_TOKEN }} }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.debian
+          push: true
+          tags: |
+            ghcr.io/euayyelo-tech/fastvault-server:${{ github.ref_name }}
+            ghcr.io/euayyelo-tech/fastvault-server:latest
