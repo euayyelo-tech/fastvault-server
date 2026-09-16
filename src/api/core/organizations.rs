@@ -1077,6 +1077,11 @@ async fn send_invite(
 
     let mut user_created: bool = false;
     for email in &data.emails {
+        let max_seats = CONFIG.org_max_seats();
+        if max_seats > 0 && Membership::count_by_org(&org_id, &conn).await >= max_seats {
+            err!(format!("This organization has reached its limit of {max_seats} members."))
+        }
+
         let mut member_status = MembershipStatus::Invited as i32;
         let user = match User::find_by_mail(email, &conn).await {
             None => {
