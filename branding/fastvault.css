@@ -1,0 +1,7 @@
+/* FastVault: colour overrides for the upstream web vault build.
+   Only variables — layout and components are upstream's. */
+:root, .theme_light, .theme_dark {
+  --color-primary-600: 47 109 246;   /* #2f6df6 */
+  --color-primary-700: 32 84 205;
+  --color-primary-300: 140 176 255;
+}
